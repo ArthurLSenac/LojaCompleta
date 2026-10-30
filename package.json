@@ -1,0 +1,19 @@
+{
+  "name": "ambar-ofertas-mysql",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loja de ofertas sem pre\u00e7o fixo \u2014 Node.js, Express e MySQL 8",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "db:criar": "npm --prefix backend run db:criar --",
+    "db:migrar": "npm --prefix backend run db:migrar",
+    "test": "npm --prefix backend test"
+  },
+  "workspaces": [
+    "backend"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

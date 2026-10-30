@@ -1,0 +1,27 @@
+{
+  "name": "ambar-marketplace-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "\u00c2mbar Ofertas \u2014 Express, MySQL 8, JWT e bcrypt",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "db:criar": "node scripts/criar-banco.js",
+    "test": "node --test --test-concurrency=1 tests/integracao.test.js",
+    "db:migrar": "node scripts/migrar-ofertas.js",
+    "pretest": "node scripts/criar-banco-test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.3"
+  }
+}
