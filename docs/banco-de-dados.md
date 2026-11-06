@@ -6,7 +6,6 @@ MySQL 8 com InnoDB (transações e chaves estrangeiras). A estrutura original po
 | --- | --- |
 | `01_estrutura.sql` | Recria o banco `ambar_marketplace` com as 19 tabelas originais, chaves e restrições. |
 | `02_dados_demo.sql` | Dados de demonstração: contas, lojas, produtos, pedidos, avaliações e perguntas. |
-
 | `03_ofertas.sql` | Acrescenta rodadas e lances, adapta os pedidos e remove o preço fixo dos produtos. |
 
 Para uma instalação nova com dados demonstrativos, execute `npm run db:criar` na raiz, após configurar `backend/.env`. O script aplica os três arquivos em ordem. Para atualizar uma instalação antiga de preço fixo, faça backup e utilize `npm run db:migrar`, conforme o README.
@@ -126,7 +125,6 @@ erDiagram
 | `configuracoes` | Regras ajustáveis | Frete grátis, desconto do Pix, parcelas e avisos do topo. |
 | `newsletter` | Inscrições | E-mail único. |
 | `logs_auditoria` | Rastreabilidade | Quem fez o quê, quando e de qual IP (com detalhes em JSON). |
-
 | `rodadas_ofertas` | Rodadas de negociação por produto | `UNIQUE (produto_id, numero)`; referências ao produto, lance aceito e pedido; estado aberto ou encerrado. |
 | `lances` | Propostas dos compradores | Referências à rodada e ao comprador; valor positivo em DECIMAL; estado aberta ou superada. |
 
