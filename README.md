@@ -113,7 +113,7 @@ ambar-marketplace/
 │   ├── css/ambar.css             # aparência e animações
 │   ├── js/ambar.js               # telas, eventos e chamadas Fetch
 │   ├── js/nucleo/icones.js       # ícones usados pela interface
-│   └── assets/                  # marca, fontes, fotos, vídeo e fallback de sons
+│   └── assets/                  # marca, fontes, fotos e vídeo
 ├── backend/
 │   ├── app.js                   # Express, cookies JWT, rotas e arquivos estáticos
 │   ├── server.js                # validação da configuração e inicialização
@@ -127,9 +127,7 @@ ambar-marketplace/
 │   └── .env.example            # modelo de configuração sem segredos
 ├── sql/                        # estrutura, dados e migração de ofertas
 ├── docs/                       # modelo do banco e roteiro de apresentação
-├── .github/workflows/testes.yml # testes automatizados no GitHub
 ├── package.json e package-lock.json
-├── .gitignore
 └── README.md
 ```
 
@@ -201,21 +199,36 @@ O `pretest` **recria somente o banco de testes** `ambar_marketplace_test`, aplic
 
 A conta MySQL usada nos testes precisa poder criar esse banco. Os testes abrem uma porta local temporária e fecham o servidor e o pool no final. `JWT_SECRET` é gerado temporariamente se estiver ausente no ambiente de testes.
 
-**Validação desta versão:** 39 testes de integração aprovados em MySQL 8.0.46. Incluem login/JWT, permissões, cadastro e edição, ofertas, duplicação, privacidade, aceitações simultâneas disputando a última unidade, pagamento simulado, cancelamento, reabertura, entrega, endereços, favoritos, auditoria e arquivos estáticos. O workflow do GitHub também executa esses testes com MySQL 8.
+A suíte de integração está em `backend/tests/integracao.test.js` e contém verificações de autenticação, permissões, ofertas, pedidos e recursos auxiliares. A presença dos testes no repositório não equivale a uma execução aprovada: o resultado deve ser conferido ao executar `npm test` no ambiente configurado.
 
-## 10. Subir no GitHub
+Esta documentação não declara uma quantidade de testes aprovados nem execução automática pelo GitHub. O comando acima executa os testes localmente.
 
-Extraia o zip e envie os arquivos desta pasta para seu repositório. Também pode usar Git:
+## 10. Registro das alterações no GitHub
 
-```bash
-git init -b main
-git add .
-git commit -m "Projeto Ambar Ofertas com MySQL"
-git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-git push -u origin main
+Mantenha as atualizações no mesmo repositório utilizado nas entregas. O envio pode ser realizado pela interface do GitHub ou pelo Git local. Agrupe alterações relacionadas e escreva mensagens que indiquem o que foi alterado.
+
+Exemplos de mensagens, a utilizar somente quando corresponderem ao trabalho realizado:
+
+- `Adiciona gitignore para arquivos locais e dependências`
+- `Corrige referências da documentação das entregas`
+- `Atualiza documentação do banco para o modelo de ofertas`
+
+Antes de enviar os arquivos, crie ou confira o `.gitignore` na raiz do repositório, ao lado deste README, com o seguinte conteúdo:
+
+```gitignore
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+.DS_Store
+Thumbs.db
 ```
 
-Substitua usuário/repositório pelos seus. `.gitignore` já exclui `.env`, `node_modules` e logs. O zip não inclui senhas da sua máquina ou dependências instaladas. O GitHub armazena o código e executa testes; para acessar a aplicação online, será necessária uma hospedagem que execute Node.js e MySQL. GitHub Pages sozinho só serve arquivos estáticos.
+Mantenha `backend/.env.example` versionado como modelo de configuração. Não envie o `.env` real nem dependências instaladas. O `.gitignore` não remove arquivos já versionados; confira os arquivos incluídos em cada alteração, inclusive quando utilizar upload pela interface do GitHub.
+
+O GitHub armazena o código e o histórico das alterações. Para acessar a aplicação online, é necessária uma hospedagem que execute Node.js e MySQL. GitHub Pages sozinho serve apenas os arquivos estáticos.
 
 ## 11. Escopo e créditos
 
@@ -324,7 +337,38 @@ As permissões são verificadas pela API. Esconder um botão no frontend não co
 
 ## Escopo acadêmico e demonstração
 
-O fluxo central apresentado é a negociação por ofertas, com CRUD de produtos, autenticação, permissões e persistência no MySQL.
+O fluxo central do projeto é a negociação por ofertas, com CRUD de produtos, autenticação, permissões e persistência no MySQL.
+
+### Recorte das entregas
+
+O planejamento registrado no projeto organiza as entregas da seguinte forma. Os critérios oficiais da atividade devem ser consultados no enunciado do professor.
+
+| Entrega | Foco do planejamento |
+| --- | --- |
+| 1 | Definição do problema, público, justificativa, proposta e estrutura inicial; documentação e registro no GitHub. |
+| 2 | Banco relacional, cadastro, login, autenticação JWT e controle de acesso. |
+| 3 | CRUDs integrados à interface, permissões e regras de negócio. |
+| 4 | Integração final, testes, documentação e apresentação. |
+
+Para a etapa 2, as principais evidências no código são os scripts em `sql/`, a documentação em `docs/banco-de-dados.md`, a conexão em `backend/database/conexao.js`, o cadastro e login em `backend/controllers/authController.js` e os middlewares de autenticação e autorização em `backend/middlewares/`.
+
+O modelo original possui 19 tabelas. A versão de ofertas acrescenta `rodadas_ofertas` e `lances`, totalizando 21 tabelas após a aplicação dos três scripts SQL. O documento `docs/README-original.md` preserva o planejamento histórico; as instruções deste README descrevem a versão atual.
+
+Os recursos das etapas posteriores são apresentados para contextualizar o projeto e não alteram o recorte de cada entrega.
+
+### Conferência da etapa 2
+
+1. Criar o banco seguindo as instruções de instalação e conferir tabelas, chaves e relacionamentos no MySQL.
+2. Cadastrar uma conta e verificar sua persistência no banco, com senha armazenada como hash.
+3. Fazer login com credenciais válidas e confirmar a recusa de credenciais inválidas.
+4. Confirmar que uma rota protegida recusa uma requisição sem autenticação com status 401.
+5. Confirmar que uma conta de comprador recebe status 403 ao tentar acessar um recurso administrativo.
+6. Conferir se a documentação do banco representa o modelo atual de 21 tabelas.
+7. Executar `npm test` no ambiente configurado e conferir o resultado antes de declarar aprovação dos testes.
+
+### Referências para a documentação das entregas
+
+Em `docs/entregas.md`, utilize os títulos das seções deste README em vez da numeração antiga: “Problema identificado”, “Público afetado”, “Justificativa”, “Proposta de solução”, “Principais funcionalidades da solução”, “Tipos de usuário e responsabilidades”, “Fluxo básico de funcionamento” e “5. Estrutura para modificar”. Atualize também a descrição do banco para distinguir as 19 tabelas originais das 21 tabelas da versão atual.
 
 Pagamentos e entregas são simulados. Recursos auxiliares que ainda não possuem interface completa estão identificados na seção de escopo deste README e não são apresentados como funcionalidades finalizadas.
 
