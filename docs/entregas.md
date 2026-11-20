@@ -50,29 +50,14 @@ Antes da apresentação, conferir:
 
 Esta lista descreve verificações a realizar; não representa um registro de testes já aprovados.
 
-## Revisão atual — Ofertas com MySQL
+## Entrega 3 — CRUD de produtos
 
-O fluxo original de carrinho e preço fixo foi substituído pelo modelo de ofertas descrito no README atual.
+O vendedor cadastra, consulta, edita e desativa seus produtos. O administrador gerencia o catálogo de todas as lojas. A interface em `frontend/js/ambar.js` envia as operações com Fetch. A rota em `backend/routes/interfaceRoutes.js` verifica o perfil e a propriedade do produto. A desativação mantém o cadastro e o histórico de ofertas no banco.
 
-A versão atual contém recursos para cadastro de produtos, envio e acompanhamento de ofertas, aceitação de propostas, reserva de estoque e acompanhamento de pedidos, com integração entre frontend, API Express e MySQL.
+## Entrega 4 — Projeto completo e apresentação
 
-Esses recursos contextualizam a evolução do projeto. Sua presença não altera o foco planejado da entrega 2: banco de dados, cadastro, login, autenticação e controle de acesso.
+O fluxo final reúne produto, proposta do comprador, aceite pelo vendedor, reserva de estoque e pedido. As transações estão em `backend/services/ofertas.js`. O registro do preço fixo utilizado no planejamento anterior está em `docs/README-original.md`.
 
-O planejamento histórico está preservado em `docs/README-original.md`. As instruções atuais de instalação e execução estão no README principal.
+A revisão de permissões restringe a curadoria ao administrador no formulário e na API. Ao editar um produto de sua loja, o vendedor preserva o destaque atual, inclusive quando um cliente antigo envia esse campo. O teste de regressão está em `backend/tests/integracao.test.js`.
 
-## Testes e limitações
-
-- A suíte de integração está em `backend/tests/integracao.test.js`.
-- A execução local utiliza `npm test` e exige o ambiente MySQL configurado.
-- O comando prepara um banco de testes; consulte a seção “9. Testes em banco separado” do README antes de executar.
-- Resultados de aprovação devem ser registrados somente após a execução dos testes na versão entregue.
-- Pagamentos e entregas são simulados.
-- Recursos auxiliares sem interface completa estão identificados na seção “11. Escopo e créditos” do README.
-
-## Registro no GitHub
-
-As atualizações devem permanecer no mesmo repositório, com commits que descrevam as alterações realizadas.
-
-O envio pode ser feito pela interface do GitHub ou pelo Git local. Cada commit deve reunir alterações relacionadas e utilizar uma mensagem específica.
-
-Arquivos `.env`, dependências instaladas e credenciais privadas não devem ser enviados. O arquivo `backend/.env.example` deve permanecer disponível como modelo de configuração.
+Consulte a seção 10 do [README](../README.md) para reproduzir o CRUD e a negociação com as contas demonstrativas. O [roteiro de apresentação](APRESENTACAO.md) cobre os quatro indicadores da etapa final.
