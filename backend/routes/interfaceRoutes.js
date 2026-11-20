@@ -32,8 +32,36 @@ router.use(async(req,res,next)=>{
   if(method==='DELETE'){await pool.execute('UPDATE produtos SET ativo=0 WHERE id=?',[id]);await s.registrar(pool,u,'produto_desativado',id);return res.json({mensagem:'Produto retirado da vitrine.'})}
   const nome=v.texto(b.nome,'o nome',{min:3,max:120}),descricao=v.texto(b.descricao,'a descrição',{min:10,max:3000}),estoque=v.inteiro(b.estoque,'o estoque',{min:0,max:100000}),categoria=v.id(b.categoria_id,'a categoria'),imagem=v.texto(b.imagem||'/assets/fotos/produto.svg','a imagem',{max:600});
   if(!/^(https:\/\/[^\s]+|\/assets\/[\w./-]+)$/.test(imagem))throw erros.requisicao('Use uma URL https de imagem.');const [[cat]]=await pool.execute('SELECT id FROM categorias WHERE id=? AND ativa=1',[categoria]);if(!cat)throw erros.requisicao('Categoria inválida.');
-  const result=await transacao(async conn=>{let target=id;if(id){await conn.execute('SELECT id FROM produtos WHERE id=? FOR UPDATE',[id]);await conn.execute('UPDATE produtos SET nome=?,descricao=?,estoque=?,categoria_id=?,imagem=?,destaque=?,ativo=? WHERE id=?',[nome,descricao,estoque,categoria,imagem,!!b.destaque,b.ativo===false?0:1,id])}
-   else{const seller=u.nivel==='admin'?v.id(b.vendedor_id||3):u.id;const [[store]]=await conn.execute("SELECT l.id FROM lojas l JOIN usuarios us ON us.id=l.usuario_id WHERE l.usuario_id=? AND l.ativa=1 AND us.status='ativo' AND us.nivel='vendedor'",[seller]);if(!store)throw erros.requisicao('Vendedor sem loja ativa.');const [r]=await conn.execute('INSERT INTO produtos(vendedor_id,categoria_id,nome,descricao,estoque,imagem,destaque,ativo) VALUES(?,?,?,?,?,?,?,?)',[seller,categoria,nome,descricao,estoque,imagem,!!b.destaque,b.ativo===false?0:1]);target=r.insertId;await conn.execute('INSERT INTO rodadas_ofertas(produto_id) VALUES(?)',[target])}await s.registrar(conn,u,id?'produto_atualizado':'produto_criado',target);return target});return res.status(id?200:201).json({produto:s.format(await s.produto(result))});
+  // Ausência do campo preserva a curadoria na edição. Somente o administrador escreve esse valor.
+  const destaque = u.nivel === 'admin' && Object.hasOwn(b, 'destaque')
+    ? v.booleano(b.destaque, 'o destaque')
+    : null;
+  const ativo = b.ativo === false ? 0 : 1;
+  const result = await transacao(async conn => {
+   if (id) {
+    await conn.execute('SELECT id FROM produtos WHERE id=? FOR UPDATE', [id]);
+    await conn.execute(
+     'UPDATE produtos SET nome=?, descricao=?, estoque=?, categoria_id=?, imagem=?, destaque=COALESCE(?, destaque), ativo=? WHERE id=?',
+     [nome, descricao, estoque, categoria, imagem, destaque, ativo, id]
+    );
+    await s.registrar(conn, u, 'produto_atualizado', id);
+    return id;
+   }
+   const seller = u.nivel === 'admin' ? v.id(b.vendedor_id || 3) : u.id;
+   const [[store]] = await conn.execute(
+    "SELECT l.id FROM lojas l JOIN usuarios us ON us.id=l.usuario_id WHERE l.usuario_id=? AND l.ativa=1 AND us.status='ativo' AND us.nivel='vendedor'",
+    [seller]
+   );
+   if (!store) throw erros.requisicao('Vendedor sem loja ativa.');
+   const [created] = await conn.execute(
+    'INSERT INTO produtos(vendedor_id,categoria_id,nome,descricao,estoque,imagem,destaque,ativo) VALUES(?,?,?,?,?,?,?,?)',
+    [seller, categoria, nome, descricao, estoque, imagem, destaque ?? false, ativo]
+   );
+   await conn.execute('INSERT INTO rodadas_ofertas(produto_id) VALUES(?)', [created.insertId]);
+   await s.registrar(conn, u, 'produto_criado', created.insertId);
+   return created.insertId;
+  });
+  return res.status(id ? 200 : 201).json({produto: s.format(await s.produto(result))});
  }
  if(/^produtos\/\d+$/.test(path)&&method==='GET'){const p=await s.produto(path.split('/')[1]);if(!s.visivel(p)&&u?.nivel!=='admin'&&u?.id!==p.vendedor_id)throw erros.naoEncontrado('Produto indisponível.');const product=s.format(p);if(u){const [[mine]]=await pool.execute('SELECT MAX(valor) valor FROM lances WHERE rodada_id=? AND comprador_id=?',[p.rodada_id,u.id]);product.minha_oferta=Number(mine.valor||0)}return res.json({produto:product})}
  if(/^produtos\/\d+\/lances$/.test(path)){
