@@ -20,6 +20,33 @@ test('Cinco senhas erradas bloqueiam a conta por tempo limitado',async()=>{for(l
 test('Vendedor cadastra produto diretamente na tabela MySQL, sem preço',async()=>{const r=await call('produtos','POST',product,'vendedor');assert.equal(r.status,201,JSON.stringify(r.body));produto=r.body.produto.id;const [[p]]=await pool.execute('SELECT nome,preco FROM produtos WHERE id=?',[produto]);assert.equal(p.nome,product.nome);assert.equal(p.preco,null)});
 test('Preço fixo não pode ser escrito diretamente pela regra CHECK',async()=>{await assert.rejects(pool.execute('UPDATE produtos SET preco=100 WHERE id=?',[produto]),e=>e.code==='ER_CHECK_CONSTRAINT_VIOLATED')});
 test('Edição do vendedor persiste; outro vendedor não altera',async()=>{assert.equal((await call('produtos/'+produto,'PUT',{...product,nome:'Vaso editado MySQL'},'vendedor')).status,200);assert.equal((await call('produtos/'+produto,'PUT',product,'outro')).status,403);assert.equal((await call('produtos/'+produto)).body.produto.nome,'Vaso editado MySQL')});
+test('Curadoria do produto pertence ao administrador durante cadastro e edição', async () => {
+ const criado = await call('produtos', 'POST', {...product, destaque: true}, 'vendedor');
+ assert.equal(criado.status, 201);
+ assert.equal(criado.body.produto.destaque, false);
+ const rota = 'produtos/' + criado.body.produto.id;
+ const editar = (perfil, campos) => call(rota, 'PUT', {...product, ...campos}, perfil);
+
+ const promovido = await editar('admin', {destaque: true});
+ assert.equal(promovido.status, 200);
+ assert.equal(promovido.body.produto.destaque, true);
+ for (const campos of [{estoque: 2}, {estoque: 2, destaque: false}]) {
+  const editado = await editar('vendedor', campos);
+  assert.equal(editado.status, 200);
+  assert.equal(editado.body.produto.estoque, 2);
+  assert.equal(editado.body.produto.destaque, true);
+ }
+ const invalido = await editar('admin', {destaque: 'inválido'});
+ assert.equal(invalido.status, 400);
+ const normal = await editar('admin', {destaque: false});
+ assert.equal(normal.status, 200);
+ assert.equal(normal.body.produto.destaque, false);
+ const mantido = await editar('vendedor', {destaque: true});
+ assert.equal(mantido.status, 200);
+ assert.equal(mantido.body.produto.destaque, false);
+ assert.equal((await call(rota, 'DELETE', null, 'vendedor')).status, 200);
+});
+
 test('Validação rejeita estoque negativo e URL insegura',async()=>{assert.equal((await call('produtos','POST',{...product,estoque:-1},'vendedor')).status,400);assert.equal((await call('produtos','POST',{...product,imagem:'javascript:alert(1)'},'vendedor')).status,400)});
 test('Visitante e vendedor não dão lances',async()=>{assert.equal((await call('produtos/'+produto+'/lances','POST',offer(1))).status,401);assert.equal((await call('produtos/'+produto+'/lances','POST',offer(1),'vendedor')).status,403)});
 test('Lance precisa ter valor positivo e até duas casas decimais',async()=>{for(const valor of [0,-1,'abc','10.001'])assert.equal((await call('produtos/'+produto+'/lances','POST',offer(valor),'comprador')).status,400)});
